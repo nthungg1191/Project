@@ -1,0 +1,521 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}Quản lý chấm công{% endblock %}
+
+{% block head %}
+<style>
+    .attendance-page {
+        padding: 24px;
+    }
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        color: #2c3e50;
+        margin: 0;
+    }
+    .page-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .filters-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .filter-group label {
+        font-size: 13px;
+        color: #5a6c7d;
+        font-weight: 500;
+    }
+    .filter-select,
+    .filter-input {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-width: 160px;
+    }
+    .filter-input {
+        cursor: text;
+    }
+    .filter-select:focus,
+    .filter-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .stats-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .stat-badge {
+        background: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        font-size: 14px;
+        color: #7f8c8d;
+    }
+    .stat-badge strong {
+        color: #2c3e50;
+        margin-left: 8px;
+    }
+    .table-view {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table thead {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    .table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .table td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+    .table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-present {
+        background: #e8f5e9;
+        color: #4caf50;
+    }
+    .status-late {
+        background: #fff3e0;
+        color: #ff9800;
+    }
+    .status-absent {
+        background: #ffebee;
+        color: #f44336;
+    }
+    .status-early_leave {
+        background: #e3f2fd;
+        color: #2196f3;
+    }
+    .btn-group {
+        display: flex;
+        gap: 8px;
+    }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #7f8c8d;
+    }
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+    }
+    .empty-state h3 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+    }
+    .time-display {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        color: #5a6c7d;
+    }
+    .photo-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .photo-thumbnail {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 2px solid #e0e0e0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .photo-thumbnail:hover {
+        border-color: #667eea;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    .photo-placeholder {
+        width: 60px;
+        height: 60px;
+        background: #f5f5f5;
+        border: 2px dashed #ddd;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 11px;
+        text-align: center;
+    }
+    .photo-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        animation: fadeIn 0.3s;
+    }
+    .photo-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .photo-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        position: relative;
+        animation: zoomIn 0.3s;
+    }
+    .photo-modal-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    .photo-modal-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        color: #fff;
+        font-size: 32px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .photo-modal-close:hover {
+        color: #ff6b6b;
+    }
+    .photo-info {
+        position: absolute;
+        bottom: -40px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: #fff;
+        font-size: 14px;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    @media (max-width: 768px) {
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-group {
+            width: 100%;
+        }
+        .filter-select,
+        .filter-input {
+            width: 100%;
+        }
+        .table-container {
+            overflow-x: scroll;
+        }
+        .table th,
+        .table td {
+            padding: 8px 5px;
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="attendance-page">
+    <div class="page-header">
+        <h1>📅 Quản lý chấm công</h1>
+        <div class="page-actions">
+            <a href="{{ url_for('admin.attendance_new') }}" class="btn btn-primary">
+                ➕ Thêm chấm công
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="GET" action="{{ url_for('admin.attendance') }}" class="filters-bar">
+        <div class="filter-group">
+            <label for="date">Ngày</label>
+            <input type="date" 
+                   name="date" 
+                   id="date" 
+                   class="filter-input"
+                   value="{{ request.args.get('date', today.strftime('%Y-%m-%d')) }}">
+        </div>
+        
+        <div class="filter-group">
+            <label for="status">Trạng thái</label>
+            <select name="status" id="status" class="filter-select">
+                <option value="">Tất cả</option>
+                <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Có mặt</option>
+                <option value="late" {% if request.args.get('status') == 'late' %}selected{% endif %}>Đi muộn</option>
+                <option value="absent" {% if request.args.get('status') == 'absent' %}selected{% endif %}>Vắng mặt</option>
+                <option value="early_leave" {% if request.args.get('status') == 'early_leave' %}selected{% endif %}>Về sớm</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="employee_id">Nhân viên</label>
+            <select name="employee_id" id="employee_id" class="filter-select">
+                <option value="">Tất cả</option>
+                {% for emp in employees %}
+                    <option value="{{ emp.id }}" {% if request.args.get('employee_id')|int == emp.id %}selected{% endif %}>
+                        {{ emp.employee_code }} - {{ emp.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group" style="align-self: flex-end;">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn-primary">🔍 Lọc</button>
+        </div>
+        
+        <div class="filter-group" style="align-self: flex-end;">
+            <label>&nbsp;</label>
+            <a href="{{ url_for('admin.attendance') }}" class="btn btn-secondary">🔄 Reset</a>
+        </div>
+    </form>
+
+    <div class="stats-bar">
+        <div class="stat-badge">
+            Tổng số: <strong>{{ records|length }}</strong>
+        </div>
+        <div class="stat-badge">
+            Có mặt: <strong>{{ records|selectattr('status', 'equalto', 'present')|list|length }}</strong>
+        </div>
+        <div class="stat-badge">
+            Đi muộn: <strong>{{ records|selectattr('status', 'equalto', 'late')|list|length }}</strong>
+        </div>
+        <div class="stat-badge">
+            Vắng mặt: <strong>{{ records|selectattr('status', 'equalto', 'absent')|list|length }}</strong>
+        </div>
+    </div>
+
+    <div class="table-view">
+        <div class="table-container">
+            {% if records %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã NV</th>
+                        <th>Tên nhân viên</th>
+                        <th>Ngày</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Giờ làm</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.employee.employee_code if record.employee else 'N/A' }}</td>
+                        <td>{{ record.employee.name if record.employee else 'N/A' }}</td>
+                        <td>{{ record.date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <div class="photo-cell">
+                                <div class="time-display">
+                                    {% if record.check_in_time %}
+                                        {{ record.check_in_time.strftime('%H:%M:%S') }}
+                                    {% else %}
+                                        <span style="color: #ccc;">--:--:--</span>
+                                    {% endif %}
+                                </div>
+                                {% if record.check_in_photo %}
+                                    <img src="{{ record.check_in_photo }}" 
+                                         alt="Check-in photo" 
+                                         class="photo-thumbnail"
+                                         onclick="showPhotoModal('{{ record.check_in_photo }}', 'Check-in: {{ record.check_in_time.strftime('%H:%M:%S') if record.check_in_time else 'N/A' }}')"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="photo-placeholder" style="display: none;">Ảnh lỗi</div>
+                                {% else %}
+                                    <div class="photo-placeholder">Không có ảnh</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="photo-cell">
+                                <div class="time-display">
+                                    {% if record.check_out_time %}
+                                        {{ record.check_out_time.strftime('%H:%M:%S') }}
+                                    {% else %}
+                                        <span style="color: #ccc;">--:--:--</span>
+                                    {% endif %}
+                                </div>
+                                {% if record.check_out_photo %}
+                                    <img src="{{ record.check_out_photo }}" 
+                                         alt="Check-out photo" 
+                                         class="photo-thumbnail"
+                                         onclick="showPhotoModal('{{ record.check_out_photo }}', 'Check-out: {{ record.check_out_time.strftime('%H:%M:%S') if record.check_out_time else 'N/A' }}')"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="photo-placeholder" style="display: none;">Ảnh lỗi</div>
+                                {% else %}
+                                    <div class="photo-placeholder">Không có ảnh</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if record.working_hours %}
+                                {{ "%.1f"|format(record.working_hours) }}h
+                            {% else %}
+                                <span style="color: #ccc;">--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ record.status }}">
+                                {% if record.status == 'present' %}Có mặt
+                                {% elif record.status == 'late' %}Đi muộn
+                                {% elif record.status == 'absent' %}Vắng mặt
+                                {% elif record.status == 'early_leave' %}Về sớm
+                                {% else %}{{ record.status }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin.attendance_edit', attendance_id=record.id) }}" 
+                                   class="btn btn-sm btn-secondary">✏️ Sửa</a>
+                                <form method="POST" 
+                                      action="{{ url_for('admin.attendance_delete', attendance_id=record.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa bản ghi chấm công này?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Xóa</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>Không có dữ liệu chấm công</h3>
+                <p>Không tìm thấy bản ghi chấm công nào với bộ lọc hiện tại.</p>
+                <a href="{{ url_for('admin.attendance_new') }}" class="btn btn-primary" style="margin-top: 16px;">
+                    ➕ Thêm chấm công mới
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Photo Modal -->
+<div id="photoModal" class="photo-modal" onclick="closePhotoModal(event)">
+    <div class="photo-modal-content" onclick="event.stopPropagation();">
+        <span class="photo-modal-close" onclick="closePhotoModal()">&times;</span>
+        <img id="modalPhoto" src="" alt="Attendance photo">
+        <div class="photo-info" id="modalPhotoInfo"></div>
+    </div>
+</div>
+
+<script>
+function showPhotoModal(photoSrc, info) {
+    const modal = document.getElementById('photoModal');
+    const modalPhoto = document.getElementById('modalPhoto');
+    const modalInfo = document.getElementById('modalPhotoInfo');
+    
+    modalPhoto.src = photoSrc;
+    modalInfo.textContent = info;
+    modal.classList.add('active');
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+function closePhotoModal(event) {
+    // Close if clicking outside the image or on close button
+    if (!event || event.target.id === 'photoModal' || event.target.classList.contains('photo-modal-close')) {
+        const modal = document.getElementById('photoModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePhotoModal();
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - Lỗi Máy Chủ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 120px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        h2 {
+            font-size: 32px;
+            margin: 20px 0;
+            font-weight: 300;
+        }
+        
+        p {
+            font-size: 18px;
+            margin: 20px 0;
+            opacity: 0.9;
+        }
+        
+        .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: 2px solid #fff;
+            color: #fff;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #fff;
+            color: #f5576c;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: #fff;
+            color: #f5576c;
+        }
+        
+        .btn-primary:hover {
+            background: transparent;
+            color: #fff;
+        }
+        
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚠️</div>
+        <h1>500</h1>
+        <h2>Lỗi Máy Chủ</h2>
+        <p>Đã xảy ra lỗi trong quá trình xử lý yêu cầu của bạn.</p>
+        <p>Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu vấn đề vẫn tiếp diễn.</p>
+        
+        <div class="buttons">
+            <a href="/" class="btn btn-primary">Trang Chủ</a>
+            <a href="javascript:history.back()" class="btn">Quay Lại</a>
+        </div>
+    </div>
+</body>
+</html>

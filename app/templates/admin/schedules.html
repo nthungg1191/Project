@@ -1,0 +1,371 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}Quản lý lịch làm việc{% endblock %}
+
+{% block head %}
+<style>
+    .schedules-page {
+        padding: 24px;
+    }
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        color: #2c3e50;
+        margin: 0;
+    }
+    .page-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    .filters-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .filter-group label {
+        font-size: 13px;
+        color: #5a6c7d;
+        font-weight: 500;
+    }
+    .filter-select {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-width: 180px;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .stats-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .stat-badge {
+        background: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        font-size: 14px;
+        color: #7f8c8d;
+    }
+    .stat-badge strong {
+        color: #2c3e50;
+        margin-left: 8px;
+    }
+    .table-view {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table thead {
+        background: #f8f9fa;
+    }
+    .table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        color: #5a6c7d;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    .table td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+    .table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .badge-success {
+        background: #e8f5e9;
+        color: #4caf50;
+    }
+    .badge-secondary {
+        background: #eceff1;
+        color: #607d8b;
+    }
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+    .btn-icon {
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-edit {
+        background: #e3f2fd;
+        color: #2196f3;
+    }
+    .btn-edit:hover {
+        background: #2196f3;
+        color: white;
+    }
+    .btn-delete {
+        background: #ffebee;
+        color: #f44336;
+    }
+    .btn-delete:hover {
+        background: #f44336;
+        color: white;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #7f8c8d;
+    }
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+    .empty-state h3 {
+        font-size: 20px;
+        color: #5a6c7d;
+        margin-bottom: 8px;
+    }
+    .empty-state p {
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+    .work-days {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .day-badge {
+        padding: 4px 8px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #5a6c7d;
+    }
+    @media (max-width: 768px) {
+        .schedules-page {
+            padding: 16px;
+        }
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-group {
+            width: 100%;
+        }
+        .filter-select {
+            width: 100%;
+        }
+        .table-container {
+            overflow-x: scroll;
+        }
+        .table {
+            min-width: 800px;
+        }
+        .actions {
+            flex-direction: column;
+        }
+        .btn-icon {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedules-page">
+    <div class="page-header">
+        <h1>📅 Quản lý lịch làm việc</h1>
+        <div class="page-actions">
+            <a href="{{ url_for('admin.schedule_new') }}" class="btn btn-primary">➕ Thêm lịch làm việc</a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" action="{{ url_for('admin.schedules') }}" class="filters-bar">
+        <div class="filter-group">
+            <label for="employee_id">Nhân viên</label>
+            <select name="employee_id" id="employee_id" class="filter-select">
+                <option value="">-- Tất cả nhân viên --</option>
+                {% for emp in employees %}
+                    <option value="{{ emp.id }}" {% if request.args.get('employee_id')|int == emp.id %}selected{% endif %}>
+                        {{ emp.employee_code }} - {{ emp.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="is_active">Trạng thái</label>
+            <select name="is_active" id="is_active" class="filter-select">
+                <option value="">-- Tất cả --</option>
+                <option value="true" {% if request.args.get('is_active') == 'true' %}selected{% endif %}>Đang hoạt động</option>
+                <option value="false" {% if request.args.get('is_active') == 'false' %}selected{% endif %}>Không hoạt động</option>
+            </select>
+        </div>
+        
+        <div class="filter-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary" style="margin-top: 0;">🔍 Lọc</button>
+            <a href="{{ url_for('admin.schedules') }}" class="btn btn-secondary" style="margin-top: 8px;">🔄 Xóa bộ lọc</a>
+        </div>
+    </form>
+
+    <!-- Statistics -->
+    <div class="stats-bar">
+        <div class="stat-badge">
+            Tổng số lịch: <strong>{{ total_schedules }}</strong>
+        </div>
+        <div class="stat-badge">
+            Đang hoạt động: <strong>{{ active_schedules }}</strong>
+        </div>
+        <div class="stat-badge">
+            Không hoạt động: <strong>{{ inactive_schedules }}</strong>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-view">
+        <div class="table-container">
+            {% if schedules %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Giờ làm việc</th>
+                        <th>Ngày áp dụng</th>
+                        <th>Ngày làm việc</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules %}
+                    <tr>
+                        <td>
+                            <strong>{{ schedule.employee.employee_code }}</strong><br>
+                            <small style="color: #7f8c8d;">{{ schedule.employee.name }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ schedule.shift_start.strftime('%H:%M') }}</strong> - 
+                            <strong>{{ schedule.shift_end.strftime('%H:%M') }}</strong>
+                        </td>
+                        <td>
+                            {% if schedule.effective_from %}
+                                <strong>Từ:</strong> {{ schedule.effective_from.strftime('%d/%m/%Y') }}<br>
+                            {% endif %}
+                            {% if schedule.effective_to %}
+                                <strong>Đến:</strong> {{ schedule.effective_to.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                <span style="color: #7f8c8d;">Không giới hạn</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if schedule.work_days %}
+                                <div class="work-days">
+                                    {% set days_map = {0: 'T2', 1: 'T3', 2: 'T4', 3: 'T5', 4: 'T6', 5: 'T7', 6: 'CN'} %}
+                                    {% for day_num in schedule.work_days.split(',') %}
+                                        {% if day_num %}
+                                            <span class="day-badge">{{ days_map[day_num|int] }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span style="color: #7f8c8d;">Tất cả các ngày</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if schedule.is_active %}
+                                <span class="badge badge-success">Đang hoạt động</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Không hoạt động</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if schedule.notes %}
+                                <small style="color: #7f8c8d;">{{ schedule.notes[:50] }}{% if schedule.notes|length > 50 %}...{% endif %}</small>
+                            {% else %}
+                                <span style="color: #bdc3c7;">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('admin.schedule_edit', schedule_id=schedule.id) }}" class="btn-icon btn-edit">✏️ Sửa</a>
+                                <form method="POST" action="{{ url_for('admin.schedule_delete', schedule_id=schedule.id) }}" 
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa lịch làm việc này?');" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn-icon btn-delete">🗑️ Xóa</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <h3>Chưa có lịch làm việc nào</h3>
+                <p>Bắt đầu bằng cách tạo lịch làm việc cho nhân viên</p>
+                <a href="{{ url_for('admin.schedule_new') }}" class="btn btn-primary">➕ Thêm lịch làm việc</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

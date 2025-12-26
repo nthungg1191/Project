@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiosk Chấm Công - Nhận Diện</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+            min-height: 100vh; display:flex; align-items:center; justify-content:center; color:#fff;
+        }
+        .wrap { width: 92%; max-width: 820px; background: rgba(255,255,255,0.12); border-radius: 20px; padding: 28px 24px; backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,0.22); box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+        h1 { font-size: 28px; font-weight: 700; letter-spacing: .3px; }
+        .sub { opacity:.9; margin-top: 4px; font-size: 14px; }
+        .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-top:16px; }
+        video, canvas { width: 420px; height: 315px; background:#000; border-radius: 12px; }
+        .side { flex:1; min-width: 220px; }
+        .controls { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+        .btn { padding:12px 20px; border-radius: 999px; border:2px solid #fff; color:#fff; background:transparent; cursor:pointer; transition: all .2s ease; font-weight:600; }
+        .btn:hover { background:#fff; color:#2193b0; transform: translateY(-1px); }
+        .btn-primary { background:#fff; color:#2193b0; }
+        .btn-primary:hover { background:transparent; color:#fff; }
+        .status { margin-top: 12px; font-size: 14px; min-height: 22px; }
+        .tips { margin-top: 12px; font-size: 13px; opacity:.9; }
+        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
+        a.link { color:#fff; opacity:.9; text-decoration: none; border-bottom:1px dashed rgba(255,255,255,0.6); }
+    </style>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div>
+                <h1>Kiosk Chấm Công</h1>
+            </div>
+            
+        </div>
+        <div class="row">
+            <div>
+                <video id="video" autoplay playsinline muted></video>
+                <canvas id="canvas" width="420" height="315" style="display:none"></canvas>
+            </div>
+            <div class="side">
+                <div class="controls">
+                    <button class="btn" id="btnStart">Bật camera</button>
+                    <button class="btn" id="btnStop">Tắt camera</button>
+                </div>
+                <div class="controls">
+                    <button class="btn btn-primary" id="btnIn">Check-in</button>
+                    <button class="btn" id="btnOut">Check-out</button>
+                </div>
+                <div id="status" class="status"></div>
+                <div class="tips">
+                    - Căn khuôn mặt vào trung tâm khung hình.<br/>
+                    - Tránh ngược sáng mạnh, giữ ổn định vài giây trước khi bấm.
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+let stream;
+const qs = (s) => document.querySelector(s);
+const video = qs('#video');
+const canvas = qs('#canvas');
+const statusEl = qs('#status');
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+        video.srcObject = stream;
+        statusEl.textContent = '📷 Camera đã bật.';
+    } catch (e) {
+        statusEl.textContent = '❌ Không truy cập được camera. Kiểm tra quyền trong trình duyệt.';
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+        video.srcObject = null;
+        statusEl.textContent = '🛑 Camera đã tắt.';
+    }
+}
+
+function captureDataURL() {
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+async function recognizeThen(action) {
+    statusEl.textContent = '⏳ Đang nhận diện...';
+    try {
+        const image = captureDataURL();
+        const recRes = await fetch('/api/face/recognize', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image })
+        });
+        const recData = await recRes.json();
+        if (!recRes.ok || !recData.success || !recData.employee_code) {
+            statusEl.textContent = `❌ Không nhận diện được: ${recData.message || 'Unknown'}`;
+            return;
+        }
+        const employee_code = recData.employee_code;
+        statusEl.textContent = '✅ Nhận diện thành công. Đang ghi chấm công...';
+
+        // Send photo along with employee_code
+        const attRes = await fetch(`/kiosk/${action}`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ 
+                employee_code: employee_code,
+                photo_path: image  // Send base64 image as photo_path
+            })
+        });
+        const attData = await attRes.json();
+        if (!attRes.ok) {
+            statusEl.textContent = `❌ ${attData.message || 'Ghi chấm công thất bại'}`;
+        } else {
+            statusEl.textContent = `✅ ${attData.message} (NV: ${employee_code})`;
+        }
+    } catch (e) {
+        statusEl.textContent = '❌ Lỗi kết nối đến máy chủ.';
+    }
+}
+
+qs('#btnStart').addEventListener('click', startCamera);
+qs('#btnStop').addEventListener('click', stopCamera);
+qs('#btnIn').addEventListener('click', () => recognizeThen('check-in'));
+qs('#btnOut').addEventListener('click', () => recognizeThen('check-out'));
+</script>
+</body>
+</html>
+
+

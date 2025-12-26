@@ -1,0 +1,399 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}Báo cáo{% endblock %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+<style>
+    .reports-page {
+        padding: 24px;
+    }
+    .reports-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .reports-header h1 {
+        margin: 0;
+        color: #2c3e50;
+    }
+    .report-filters {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .report-filters select,
+    .report-filters input {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .report-filters select:focus,
+    .report-filters input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+        background: #95a5a6;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background: #7f8c8d;
+    }
+    .report-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .summary-card-title {
+        font-size: 13px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .summary-card-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .chart-container {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+    }
+    .chart-container h3 {
+        margin: 0 0 20px 0;
+        color: #2c3e50;
+    }
+    .report-table {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .report-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .report-table th {
+        background: #f8f9fa;
+        padding: 14px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    .report-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .report-table tr:hover {
+        background: #f8f9fa;
+    }
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .badge-success {
+        background: #d4edda;
+        color: #155724;
+    }
+    .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .badge-info {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="reports-header">
+        <h1>📊 Báo cáo chấm công</h1>
+        <div>
+            {% if report_data %}
+            <a href="/admin/reports/export?type={{ report_type }}&date={{ report_data.date if report_data.date else '' }}&year={{ report_data.year if report_data.year else '' }}&month={{ report_data.month if report_data.month else '' }}" 
+               class="btn btn-primary">
+                📥 Export Excel
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form method="GET" action="/admin/reports" class="report-filters">
+        <select name="type" onchange="this.form.submit()">
+            <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Báo cáo ngày</option>
+            <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Báo cáo tuần</option>
+            <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Báo cáo tháng</option>
+        </select>
+        
+        {% if report_type == 'daily' %}
+        <input type="date" name="date" value="{{ report_data.date if report_data else '' }}" onchange="this.form.submit()">
+        {% elif report_type == 'weekly' %}
+        <input type="date" name="date" value="{{ report_data.start_date if report_data else '' }}" onchange="this.form.submit()">
+        {% elif report_type == 'monthly' %}
+        <input type="number" name="year" value="{{ report_data.year if report_data else date.today().year }}" min="2020" max="2100" placeholder="Năm" onchange="this.form.submit()">
+        <input type="number" name="month" value="{{ report_data.month if report_data else date.today().month }}" min="1" max="12" placeholder="Tháng" onchange="this.form.submit()">
+        {% endif %}
+        
+        <button type="submit" class="btn btn-secondary">🔍 Xem báo cáo</button>
+    </form>
+    
+    {% if report_data %}
+    <!-- Summary Cards -->
+    <div class="report-summary">
+        {% if report_type == 'daily' %}
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng nhân viên</div>
+            <div class="summary-card-value">{{ report_data.total_employees }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Đã chấm công</div>
+            <div class="summary-card-value">{{ report_data.checked_in }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Có mặt</div>
+            <div class="summary-card-value">{{ report_data.present }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Đi muộn</div>
+            <div class="summary-card-value">{{ report_data.late }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Vắng mặt</div>
+            <div class="summary-card-value">{{ report_data.absent }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tỷ lệ chấm công</div>
+            <div class="summary-card-value">{{ report_data.attendance_rate }}%</div>
+        </div>
+        {% elif report_type == 'weekly' %}
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng có mặt</div>
+            <div class="summary-card-value">{{ report_data.week_total_present }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng đi muộn</div>
+            <div class="summary-card-value">{{ report_data.week_total_late }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng vắng mặt</div>
+            <div class="summary-card-value">{{ report_data.week_total_absent }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng giờ làm</div>
+            <div class="summary-card-value">{{ report_data.week_total_hours }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tỷ lệ trung bình</div>
+            <div class="summary-card-value">{{ report_data.average_attendance_rate }}%</div>
+        </div>
+        {% elif report_type == 'monthly' %}
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng có mặt</div>
+            <div class="summary-card-value">{{ report_data.total_present }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng đi muộn</div>
+            <div class="summary-card-value">{{ report_data.total_late }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng vắng mặt</div>
+            <div class="summary-card-value">{{ report_data.total_absent }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tổng giờ làm</div>
+            <div class="summary-card-value">{{ report_data.total_working_hours }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tỷ lệ chấm công</div>
+            <div class="summary-card-value">{{ report_data.average_attendance_rate }}%</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-card-title">Tỷ lệ đúng giờ</div>
+            <div class="summary-card-value">{{ report_data.on_time_rate }}%</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Chart -->
+    {% if report_type == 'weekly' or report_type == 'monthly' %}
+    <div class="chart-container">
+        <h3>📈 Biểu đồ thống kê</h3>
+        <canvas id="reportChart" height="80"></canvas>
+    </div>
+    {% endif %}
+    
+    <!-- Table -->
+    <div class="report-table">
+        <table>
+            <thead>
+                <tr>
+                    {% if report_type == 'daily' %}
+                    <th>Nhân viên</th>
+                    <th>Mã NV</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Giờ làm</th>
+                    <th>Trạng thái</th>
+                    {% elif report_type == 'weekly' %}
+                    <th>Ngày</th>
+                    <th>Có mặt</th>
+                    <th>Đi muộn</th>
+                    <th>Vắng mặt</th>
+                    <th>Giờ làm</th>
+                    {% elif report_type == 'monthly' %}
+                    <th>Ngày</th>
+                    <th>Có mặt</th>
+                    <th>Đi muộn</th>
+                    <th>Vắng mặt</th>
+                    <th>Rời sớm</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if report_type == 'daily' %}
+                    {% for att in report_data.attendances[:50] %}
+                    <tr>
+                        <td>{{ att.employee_name }}</td>
+                        <td>{{ att.employee_code }}</td>
+                        <td>{{ att.check_in_time.split('T')[1][:5] if att.check_in_time else 'N/A' }}</td>
+                        <td>{{ att.check_out_time.split('T')[1][:5] if att.check_out_time else 'N/A' }}</td>
+                        <td>{{ att.working_hours }}h</td>
+                        <td>
+                            {% if att.status == 'present' %}
+                            <span class="badge badge-success">Có mặt</span>
+                            {% elif att.status == 'late' %}
+                            <span class="badge badge-warning">Đi muộn</span>
+                            {% elif att.status == 'early_leave' %}
+                            <span class="badge badge-info">Rời sớm</span>
+                            {% else %}
+                            <span class="badge badge-danger">Vắng mặt</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% elif report_type == 'weekly' or report_type == 'monthly' %}
+                    {% for day in report_data.daily_stats %}
+                    <tr>
+                        <td>{{ day.date }}</td>
+                        <td>{{ day.present }}</td>
+                        <td>{{ day.late }}</td>
+                        <td>{{ day.absent }}</td>
+                        {% if report_type == 'monthly' %}
+                        <td>{{ day.early_leave }}</td>
+                        {% else %}
+                        <td>{{ day.working_hours }}h</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; background: white; border-radius: 12px;">
+        <p style="color: #7f8c8d; font-size: 16px;">Chọn loại báo cáo và thời gian để xem dữ liệu</p>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    {% if report_data and (report_type == 'weekly' or report_type == 'monthly') %}
+    const ctx = document.getElementById('reportChart');
+    if (ctx) {
+        const dailyStats = {{ report_data.daily_stats|tojson }};
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dailyStats.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'short' });
+                }),
+                datasets: [
+                    {
+                        label: 'Có mặt',
+                        data: dailyStats.map(d => d.present),
+                        backgroundColor: '#27ae60',
+                    },
+                    {
+                        label: 'Đi muộn',
+                        data: dailyStats.map(d => d.late),
+                        backgroundColor: '#e74c3c',
+                    },
+                    {
+                        label: 'Vắng mặt',
+                        data: dailyStats.map(d => d.absent),
+                        backgroundColor: '#95a5a6',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}
+

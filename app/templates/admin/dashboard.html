@@ -1,0 +1,349 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.css" rel="stylesheet">
+<style>
+    .dashboard {
+        padding: 24px;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+    .stat-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .stat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .stat-card-title {
+        font-size: 14px;
+        color: #7f8c8d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .stat-card-icon {
+        font-size: 32px;
+        opacity: 0.8;
+    }
+    .stat-card-value {
+        font-size: 36px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+    .stat-card-change {
+        font-size: 12px;
+        color: #27ae60;
+    }
+    .stat-card-change.negative {
+        color: #e74c3c;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    .chart-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .chart-card h3 {
+        margin: 0 0 20px 0;
+        color: #2c3e50;
+        font-size: 20px;
+    }
+    .alerts-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .alerts-card h3 {
+        margin: 0 0 20px 0;
+        color: #2c3e50;
+        font-size: 20px;
+    }
+    .alert-item {
+        padding: 12px;
+        border-left: 4px solid #e74c3c;
+        background: #fff5f5;
+        border-radius: 6px;
+        margin-bottom: 12px;
+    }
+    .alert-item.warning {
+        border-left-color: #f39c12;
+        background: #fffbf0;
+    }
+    .alert-item.info {
+        border-left-color: #3498db;
+        background: #f0f8ff;
+    }
+    .alert-item-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+    .alert-item-desc {
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+    .employee-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .employee-list-item {
+        padding: 12px;
+        border-bottom: 1px solid #ecf0f1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .employee-list-item:last-child {
+        border-bottom: none;
+    }
+    .employee-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    .employee-time {
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1 style="margin-bottom: 24px; color: #2c3e50;">📊 Dashboard</h1>
+    
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Tổng nhân viên</div>
+                <div class="stat-card-icon">👥</div>
+            </div>
+            <div class="stat-card-value">{{ total_employees }}</div>
+            <div class="stat-card-change">Nhân viên đang hoạt động</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Chấm công hôm nay</div>
+                <div class="stat-card-icon">✅</div>
+            </div>
+            <div class="stat-card-value">{{ today_report.checked_in }}</div>
+            <div class="stat-card-change">
+                Tỷ lệ: {{ today_report.attendance_rate }}%
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Đi muộn</div>
+                <div class="stat-card-icon">⏰</div>
+            </div>
+            <div class="stat-card-value">{{ today_report.late }}</div>
+            <div class="stat-card-change negative">
+                Cần theo dõi
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Vắng mặt</div>
+                <div class="stat-card-icon">❌</div>
+            </div>
+            <div class="stat-card-value">{{ today_report.absent }}</div>
+            <div class="stat-card-change negative">
+                Chưa chấm công
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Tổng giờ làm</div>
+                <div class="stat-card-icon">⏱️</div>
+            </div>
+            <div class="stat-card-value">{{ today_report.total_working_hours }}</div>
+            <div class="stat-card-change">Giờ hôm nay</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-card-title">Tỷ lệ đúng giờ</div>
+                <div class="stat-card-icon">🎯</div>
+            </div>
+            <div class="stat-card-value">{{ today_report.on_time_rate }}%</div>
+            <div class="stat-card-change">
+                Nhân viên đúng giờ
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Alerts -->
+    <div class="dashboard-grid">
+        <div class="chart-card">
+            <h3>📈 Thống kê tuần này</h3>
+            <canvas id="weeklyChart" height="100"></canvas>
+        </div>
+        
+        <div class="alerts-card">
+            <h3>🔔 Cảnh báo</h3>
+            
+            {% if alerts|length > 0 %}
+                {% for alert in alerts %}
+                <div class="alert-item {{ alert.type }}">
+                    <div class="alert-item-title">{{ alert.title }}</div>
+                    <div class="alert-item-desc">{{ alert.message }}</div>
+                    {% if alert.action_url %}
+                    <a href="{{ alert.action_url }}" style="display: inline-block; margin-top: 8px; color: inherit; text-decoration: underline; font-size: 12px;">
+                        Xem chi tiết →
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="alert-item info">
+                <div class="alert-item-title">✅ Mọi thứ đều ổn!</div>
+                <div class="alert-item-desc">Không có cảnh báo nào</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Late Employees List -->
+    {% if late_employees|length > 0 %}
+    <div class="chart-card" style="margin-top: 24px;">
+        <h3>⏰ Nhân viên đi muộn hôm nay</h3>
+        <ul class="employee-list">
+            {% for emp in late_employees[:10] %}
+            <li class="employee-list-item">
+                <div>
+                    <div class="employee-name">{{ emp.employee_name }} ({{ emp.employee_code }})</div>
+                    <div class="employee-time">
+                        Check-in: {{ emp.check_in_time.split('T')[1][:5] if emp.check_in_time else 'N/A' }}
+                    </div>
+                </div>
+                <span style="color: #e74c3c; font-weight: 600;">Muộn</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="application/json" id="weekly-data">
+{% if weekly_report and weekly_report.daily_stats %}{{ weekly_report.daily_stats|tojson }}{% else %}[]{% endif %}
+</script>
+<script>
+    // Weekly Chart
+    (function() {
+        const weeklyCtx = document.getElementById('weeklyChart');
+        if (!weeklyCtx) return;
+        
+        var weeklyData = [];
+        try {
+            var dataElement = document.getElementById('weekly-data');
+            if (dataElement && dataElement.textContent) {
+                weeklyData = JSON.parse(dataElement.textContent);
+            }
+        } catch(e) {
+            console.error('Error parsing weekly data:', e);
+            weeklyData = [];
+        }
+        
+        if (!weeklyData || weeklyData.length === 0) {
+            weeklyCtx.parentElement.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Chưa có dữ liệu tuần này</p>';
+            return;
+        }
+        
+        var labels = weeklyData.map(function(d) {
+            if (!d || !d.date) return '';
+            var date = new Date(d.date);
+            return date.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric' });
+        });
+        
+        var presentData = weeklyData.map(function(d) { return d ? (d.present || 0) : 0; });
+        var lateData = weeklyData.map(function(d) { return d ? (d.late || 0) : 0; });
+        var absentData = weeklyData.map(function(d) { return d ? (d.absent || 0) : 0; });
+        
+        new Chart(weeklyCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Có mặt',
+                        data: presentData,
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Đi muộn',
+                        data: lateData,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Vắng mặt',
+                        data: absentData,
+                        borderColor: '#95a5a6',
+                        backgroundColor: 'rgba(149, 165, 166, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    })();
+</script>
+{% endblock %}

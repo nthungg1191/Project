@@ -1,0 +1,148 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block title %}{{ 'Sửa' if schedule else 'Thêm mới' }} lịch làm việc{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ 'Sửa' if schedule else 'Thêm mới' }} lịch làm việc</h1>
+    <a href="{{ url_for('admin.schedules') }}" class="btn btn-secondary">Quay lại</a>
+</div>
+
+<form method="POST" class="form-container">
+    <div class="form-group">
+        <label for="employee_id">Nhân viên *</label>
+        <select name="employee_id" id="employee_id" class="form-control" required>
+            <option value="">-- Chọn nhân viên --</option>
+            {% for emp in employees %}
+                <option value="{{ emp.id }}" 
+                        {% if schedule and schedule.employee_id == emp.id %}selected{% endif %}>
+                    {{ emp.employee_code }} - {{ emp.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <small class="form-text">Chọn nhân viên để áp dụng lịch làm việc</small>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="shift_start">Giờ bắt đầu ca *</label>
+            <input type="time" 
+                   name="shift_start" 
+                   id="shift_start" 
+                   class="form-control" 
+                   value="{% if schedule and schedule.shift_start %}{{ schedule.shift_start.strftime('%H:%M') }}{% endif %}" 
+                   required>
+            <small class="form-text">Giờ bắt đầu ca làm việc (ví dụ: 08:00)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="shift_end">Giờ kết thúc ca *</label>
+            <input type="time" 
+                   name="shift_end" 
+                   id="shift_end" 
+                   class="form-control" 
+                   value="{% if schedule and schedule.shift_end %}{{ schedule.shift_end.strftime('%H:%M') }}{% endif %}" 
+                   required>
+            <small class="form-text">Giờ kết thúc ca làm việc (ví dụ: 17:00)</small>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="effective_from">Ngày bắt đầu áp dụng</label>
+            <input type="date" 
+                   name="effective_from" 
+                   id="effective_from" 
+                   class="form-control"
+                   value="{% if schedule and schedule.effective_from %}{{ schedule.effective_from.strftime('%Y-%m-%d') }}{% endif %}">
+            <small class="form-text">Ngày bắt đầu áp dụng lịch này (để trống nếu áp dụng ngay)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="effective_to">Ngày kết thúc áp dụng</label>
+            <input type="date" 
+                   name="effective_to" 
+                   id="effective_to" 
+                   class="form-control"
+                   value="{% if schedule and schedule.effective_to %}{{ schedule.effective_to.strftime('%Y-%m-%d') }}{% endif %}">
+            <small class="form-text">Ngày kết thúc áp dụng lịch này (để trống nếu không giới hạn)</small>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Ngày làm việc trong tuần</label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 8px;">
+            {% set days = [
+                ('0', 'Thứ 2'),
+                ('1', 'Thứ 3'),
+                ('2', 'Thứ 4'),
+                ('3', 'Thứ 5'),
+                ('4', 'Thứ 6'),
+                ('5', 'Thứ 7'),
+                ('6', 'Chủ nhật')
+            ] %}
+            {% for day_value, day_label in days %}
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; transition: all 0.3s;">
+                    <input type="checkbox" 
+                           name="work_days" 
+                           value="{{ day_value }}"
+                           {% if schedule and schedule.work_days and day_value in schedule.work_days.split(',') %}checked{% endif %}
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 14px; font-weight: 500;">{{ day_label }}</span>
+                </label>
+            {% endfor %}
+        </div>
+        <small class="form-text">Chọn các ngày làm việc trong tuần (để trống nếu làm tất cả các ngày)</small>
+    </div>
+
+    <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" 
+                   name="is_active" 
+                   id="is_active"
+                   {% if not schedule or schedule.is_active %}checked{% endif %}
+                   style="width: 20px; height: 20px; cursor: pointer;">
+            <span>Đang hoạt động</span>
+        </label>
+        <small class="form-text">Nếu bỏ chọn, lịch này sẽ không được sử dụng. Khi kích hoạt một lịch mới, các lịch cũ của nhân viên này sẽ tự động bị vô hiệu hóa nếu có trùng lặp.</small>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Ghi chú</label>
+        <textarea name="notes" 
+                  id="notes" 
+                  class="form-control" 
+                  rows="3"
+                  placeholder="Ghi chú về lịch làm việc này...">{% if schedule and schedule.notes %}{{ schedule.notes }}{% endif %}</textarea>
+        <small class="form-text">Ghi chú bổ sung về lịch làm việc (tùy chọn)</small>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {{ 'Cập nhật' if schedule else 'Tạo mới' }} lịch làm việc
+        </button>
+        <a href="{{ url_for('admin.schedules') }}" class="btn btn-secondary">Hủy</a>
+    </div>
+</form>
+
+<style>
+    label[for="is_active"] {
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    label[for="is_active"]:has(input:checked) {
+        border-color: #667eea;
+        background: #f0f4ff;
+    }
+    label[for="is_active"]:has(input:checked):hover {
+        border-color: #667eea;
+        background: #e8f0ff;
+    }
+    label[for="is_active"]:hover {
+        border-color: #b0b0b0;
+    }
+</style>
+{% endblock %}
+

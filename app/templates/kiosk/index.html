@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Chấm Công</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .description {
+            font-size: 18px;
+            margin: 30px 0;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+        
+        .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: 2px solid #fff;
+            color: #fff;
+            background: transparent;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #fff;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: #fff;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            background: transparent;
+            color: #fff;
+        }
+        
+        .features {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .kiosk-box {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 15px;
+            text-align: left;
+        }
+        .video-row { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-top:12px; }
+        video, canvas { width: 360px; height: 270px; background:#000; border-radius: 10px; }
+        .controls { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        input[type="text"] {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: none;
+            width: 260px;
+        }
+        .result {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        .enroll-box { margin-top: 18px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.3); }
+        .enroll-controls { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+        .pill { padding:6px 10px; border-radius: 999px; background: rgba(255,255,255,0.16); font-size:12px; }
+        .quality { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+        .qitem { display:flex; gap:8px; align-items:center; }
+        .qbar { width:160px; height:8px; background: rgba(255,255,255,0.2); border-radius:6px; position:relative; }
+        .qbar > span { position:absolute; left:0; top:0; bottom:0; width:0%; background: linear-gradient(90deg,#ff6b6b,#feca57,#1dd1a1); border-radius:6px; transition: width .2s ease; }
+        .thumbs { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+        .thumbs img { width:88px; height:66px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.25); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hệ Thống Chấm Công</h1>
+        <p class="subtitle">Face Recognition Attendance System</p>
+        <p class="description">
+            Chào mừng đến với hệ thống chấm công thông minh sử dụng nhận diện khuôn mặt.
+            Hệ thống giúp quản lý chấm công nhanh chóng, chính xác và bảo mật.
+        </p>
+        
+        <div class="buttons">
+            <a href="/auth/login" class="btn btn-primary">Đăng Nhập</a>
+            <a href="/api" class="btn">API Documentation</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">Face Recognition</div>
+                <div class="feature-desc">Nhận diện khuôn mặt thông minh</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Real-time</div>
+                <div class="feature-desc">Chấm công thời gian thực</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">Secure</div>
+                <div class="feature-desc">Bảo mật cao</div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

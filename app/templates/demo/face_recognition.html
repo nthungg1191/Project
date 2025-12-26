@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Nhận Diện Khuôn Mặt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        h1 {
+            font-size: 36px;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .camera-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        canvas {
+            display: none;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .employee-info {
+            margin-top: 20px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .employee-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            display: block;
+            border: 4px solid #667eea;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .recognition-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .recognition-badge.show {
+            display: block;
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .guidance-panel {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #fff9db;
+            border: 1px solid #ffe58f;
+            color: #8d6c00;
+            box-shadow: 0 10px 30px rgba(255, 229, 143, 0.2);
+        }
+
+        .guidance-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guidance-panel p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .guidance-panel ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Demo Nhận Diện Khuôn Mặt</h1>
+        <p class="subtitle">Hệ thống nhận diện nhân viên bằng mô hình tiêu chuẩn</p>
+        
+        <div class="main-content">
+            <!-- Camera Section -->
+            <div class="camera-section">
+                <h2 class="section-title">
+                    <span>📷</span>
+                    Camera
+                </h2>
+                <div class="video-container">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas" width="640" height="480"></canvas>
+                    <div class="recognition-badge" id="recognitionBadge">✓ Nhận diện thành công</div>
+                </div>
+                <div class="controls">
+                    <button class="btn btn-primary" id="btnStart">Bật Camera</button>
+                    <button class="btn btn-secondary" id="btnStop">Tắt Camera</button>
+                    <button class="btn btn-success" id="btnRecognize">Nhận Diện</button>
+                </div>
+                <div class="guidance-panel" id="guidancePanel">
+                    <h3>📏 Đặt khuôn mặt đúng tầm</h3>
+                    <p id="guidanceMessage">Giữ khuôn mặt trong trung tâm khung hình, nhìn thẳng vào camera để hệ thống tìm được khuôn mặt.</p>
+                    <ul>
+                        <li>Tránh để mặt quá gần hoặc quá xa (khoảng cách ~40-60cm)</li>
+                        <li>Đảm bảo ánh sáng chiếu vào mặt, không bị ngược sáng</li>
+                        <li>Không che mặt bằng tay, khẩu trang hoặc tóc</li>
+                    </ul>
+                </div>
+                <div id="statusMessage" class="status-message hidden"></div>
+            </div>
+            
+            <!-- Employee Info Section -->
+            <div class="info-section">
+                <h2 class="section-title">
+                    <span>👤</span>
+                    Thông Tin Nhân Viên
+                </h2>
+                <div id="employeeInfo" class="employee-info">
+                    <div class="info-card" style="text-align: center; color: #999;">
+                        <p>Chưa nhận diện được nhân viên nào</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Vui lòng bật camera và nhấn "Nhận Diện"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let recognitionInterval = null;
+        
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const btnRecognize = document.getElementById('btnRecognize');
+        const statusMessage = document.getElementById('statusMessage');
+        const employeeInfo = document.getElementById('employeeInfo');
+        const recognitionBadge = document.getElementById('recognitionBadge');
+        const guidancePanel = document.getElementById('guidancePanel');
+        const guidanceMessage = document.getElementById('guidanceMessage');
+        
+        const defaultGuidance = 'Giữ khuôn mặt trong trung tâm khung hình, nhìn thẳng vào camera để hệ thống tìm được khuôn mặt.';
+        const guidanceTips = [
+            'Giữ khoảng cách 40-60cm với camera để khuôn mặt vừa khung hình.',
+            'Hạ cằm xuống hoặc nâng cao camera nếu chỉ thấy trán hoặc cằm.',
+            'Xoay mặt nhẹ nếu ánh sáng bị chói; ưu tiên ánh sáng phía trước.',
+            'Gạt tóc, tháo khẩu trang hoặc kính phản quang nếu có thể.',
+            'Giữ nguyên tư thế trong 2-3 giây để hệ thống khoá khuôn mặt.'
+        ];
+        let guidanceInterval = null;
+        let guidanceIndex = 0;
+        
+        function startGuidance(message = defaultGuidance) {
+            if (guidanceInterval) {
+                clearInterval(guidanceInterval);
+            }
+            guidanceIndex = 0;
+            guidanceMessage.textContent = message;
+            
+            guidanceInterval = setInterval(() => {
+                guidanceIndex = (guidanceIndex + 1) % guidanceTips.length;
+                guidanceMessage.textContent = guidanceTips[guidanceIndex];
+            }, 4500);
+        }
+        
+        function updateGuidance(message) {
+            guidanceMessage.textContent = message;
+        }
+        
+        function stopGuidance(finalMessage = defaultGuidance) {
+            if (guidanceInterval) {
+                clearInterval(guidanceInterval);
+                guidanceInterval = null;
+            }
+            guidanceMessage.textContent = finalMessage;
+        }
+        
+        // Start camera
+        btnStart.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+                showStatus('Camera đã được bật thành công', 'success');
+                startGuidance('Camera đã bật. Hãy giữ khuôn mặt trong khung và nhìn thẳng.');
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+                btnRecognize.disabled = false;
+            } catch (error) {
+                showStatus('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.', 'error');
+                console.error('Camera error:', error);
+            }
+        });
+        
+        // Stop camera
+        btnStop.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+                showStatus('Camera đã được tắt', 'info');
+                stopGuidance('Camera đang tắt. Bật lại để nhận diện.');
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+                btnRecognize.disabled = true;
+                clearEmployeeInfo();
+            }
+        });
+        
+        // Recognize face
+        btnRecognize.addEventListener('click', async () => {
+            if (!stream) {
+                showStatus('Vui lòng bật camera trước', 'error');
+                return;
+            }
+            
+            await recognizeFace();
+        });
+        
+        // Capture image from video
+        function captureImage() {
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            return canvas.toDataURL('image/jpeg', 0.9);
+        }
+        
+        // Recognize face
+        async function recognizeFace() {
+            showStatus('Đang nhận diện khuôn mặt...', 'info');
+            startGuidance('Đang quét khuôn mặt... Giữ nguyên vị trí trong vài giây.');
+            btnRecognize.disabled = true;
+            
+            try {
+                const imageData = captureImage();
+                const response = await fetch('/api/face/recognize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        image: imageData
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    const message = data.message || 'Không tìm thấy khuôn mặt';
+                    if (message.toLowerCase().includes('face could not be detected') || message.toLowerCase().includes('không tìm thấy khuôn mặt')) {
+                        updateGuidance('Chưa thấy rõ khuôn mặt. Hãy đưa mặt gần hơn và nhìn thẳng vào camera.');
+                    } else {
+                        updateGuidance('Có lỗi khi nhận diện. Thử lại sau vài giây.');
+                    }
+                    showStatus(`Không nhận diện được: ${data.message || 'Không tìm thấy khuôn mặt'}`, 'error');
+                    btnRecognize.disabled = false;
+                    return;
+                }
+                
+                if (!data.employee_code) {
+                    showStatus('Không tìm thấy nhân viên phù hợp', 'error');
+                    btnRecognize.disabled = false;
+                    return;
+                }
+                
+                // Show recognition badge
+                recognitionBadge.classList.add('show');
+                setTimeout(() => {
+                    recognitionBadge.classList.remove('show');
+                }, 2000);
+                stopGuidance('Đã bắt được khuôn mặt rõ ràng. Bạn có thể tiếp tục nhận diện.');
+                
+                // Get employee information
+                await loadEmployeeInfo(data.employee_code, data.confidence);
+                showStatus(`Nhận diện thành công! Mã nhân viên: ${data.employee_code}`, 'success');
+                
+            } catch (error) {
+                console.error('Recognition error:', error);
+                showStatus('Lỗi kết nối đến máy chủ', 'error');
+                updateGuidance('Không thể kết nối. Kiểm tra mạng và thử lại.');
+            } finally {
+                btnRecognize.disabled = false;
+            }
+        }
+        
+        // Load employee information
+        async function loadEmployeeInfo(employeeCode, confidence) {
+            try {
+                const response = await fetch(`/demo/employee/${employeeCode}`);
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    employeeInfo.innerHTML = `
+                        <div class="info-card" style="text-align: center; color: #999;">
+                            <p>Không tìm thấy thông tin nhân viên</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const emp = data.employee;
+                const confidencePercent = (confidence * 100).toFixed(1);
+                
+                let photoHtml = '';
+                if (emp.photo_path) {
+                    photoHtml = `<img src="${emp.photo_path}" alt="${emp.name}" class="employee-photo" onerror="this.style.display='none'">`;
+                } else {
+                    photoHtml = `<div class="employee-photo" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: bold;">${emp.name.charAt(0).toUpperCase()}</div>`;
+                }
+                
+                employeeInfo.innerHTML = `
+                    ${photoHtml}
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Mã nhân viên:</span>
+                            <span class="info-value">${emp.employee_code || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Họ và tên:</span>
+                            <span class="info-value">${emp.name || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value">${emp.email || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Số điện thoại:</span>
+                            <span class="info-value">${emp.phone || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Phòng ban:</span>
+                            <span class="info-value">${emp.department || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Chức vụ:</span>
+                            <span class="info-value">${emp.position || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Ngày vào làm:</span>
+                            <span class="info-value">${emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                        </div>
+                        <div class="info-row" style="background: #e7f3ff; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                            <span class="info-label">Độ tin cậy:</span>
+                            <span class="info-value" style="color: #28a745; font-weight: bold;">${confidencePercent}%</span>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading employee info:', error);
+                employeeInfo.innerHTML = `
+                    <div class="info-card" style="text-align: center; color: #999;">
+                        <p>Lỗi khi tải thông tin nhân viên</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.classList.remove('hidden');
+        }
+        
+        // Clear employee info
+        function clearEmployeeInfo() {
+            employeeInfo.innerHTML = `
+                <div class="info-card" style="text-align: center; color: #999;">
+                    <p>Chưa nhận diện được nhân viên nào</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Vui lòng bật camera và nhấn "Nhận Diện"</p>
+                </div>
+            `;
+        }
+        
+        // Initialize buttons
+        btnStop.disabled = true;
+        btnRecognize.disabled = true;
+
+        // Hiển thị vòng lặp hướng dẫn ngay từ khi mở trang
+        startGuidance();
+    </script>
+</body>
+</html>
+

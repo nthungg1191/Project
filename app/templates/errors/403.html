@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Truy Cập Bị Từ Chối</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 120px;
+            font-weight: bold;
+            margin: 0;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            font-size: 32px;
+            margin: 20px 0;
+            font-weight: 300;
+            color: #333;
+        }
+        
+        p {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #666;
+        }
+        
+        .buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            border: 2px solid #fa709a;
+            color: #fa709a;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #fa709a;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #fff;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚫</div>
+        <h1>403</h1>
+        <h2>Truy Cập Bị Từ Chối</h2>
+        <p>Bạn không có quyền truy cập trang này.</p>
+        <p>Vui lòng đăng nhập với tài khoản phù hợp hoặc liên hệ quản trị viên.</p>
+        
+        <div class="buttons">
+            <a href="/" class="btn btn-primary">Trang Chủ</a>
+            <a href="/auth/login" class="btn">Đăng Nhập</a>
+        </div>
+    </div>
+</body>
+</html>
