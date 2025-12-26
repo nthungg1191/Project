@@ -14,9 +14,9 @@ Hệ thống chấm công tự động sử dụng công nghệ nhận diện kh
    👥 Phân Tích Người Dùng
 
   Người Dùng Chính
--   Công nhân (20 người)  : Chấm công vào/ra ca làm việc
--   Quản lý/Giám sát  : Xem báo cáo, quản lý danh sách
--   Admin  : Cài đặt hệ thống, quản lý dữ liệu
+-   Công nhân: Chấm công vào/ra ca làm việc
+-   Quản lý/Giám sát: Xem báo cáo, quản lý danh sách
+-   Admin: Cài đặt hệ thống, quản lý dữ liệu
 
   Đặc Điểm Công Nhân
 - Có thể không quen với công nghệ cao
